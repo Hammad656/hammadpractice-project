@@ -7,6 +7,7 @@ url = 'https://v6.exchangerate-api.com/v6/41e90c5e343584027bac754c/latest/USD'
 # Making our request
 response = requests.get(url)
 data = response.json()
-#dev test
+# testing
 # Your JSON object
 print(data)
+#fhfrf
