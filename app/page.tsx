@@ -31,6 +31,25 @@ const currencies = [
   { code: "PHP", name: "Philippine Peso", flag: "🇵🇭" },
   { code: "ILS", name: "Israeli New Shekel", flag: "🇮🇱" },
   { code: "ISK", name: "Icelandic Króna", flag: "🇮🇸" },
+  { code: "PKR", name: "Pakistani Rupee", flag: "🇵🇰" },
+  { code: "AED", name: "UAE Dirham", flag: "🇦🇪" },
+  { code: "SAR", name: "Saudi Riyal", flag: "🇸🇦" },
+  { code: "BDT", name: "Bangladeshi Taka", flag: "🇧🇩" },
+  { code: "NPR", name: "Nepalese Rupee", flag: "🇳🇵" },
+  { code: "LKR", name: "Sri Lankan Rupee", flag: "🇱🇰" },
+  { code: "MYR", name: "Malaysian Ringgit", flag: "🇲🇾" },
+  { code: "VND", name: "Vietnamese Dong", flag: "🇻🇳" },
+  { code: "NGN", name: "Nigerian Naira", flag: "🇳🇬" },
+  { code: "EGP", name: "Egyptian Pound", flag: "🇪🇬" },
+  { code: "QAR", name: "Qatari Riyal", flag: "🇶🇦" },
+  { code: "KWD", name: "Kuwaiti Dinar", flag: "🇰🇼" },
+  { code: "RUB", name: "Russian Ruble", flag: "🇷🇺" },
+  { code: "UAH", name: "Ukrainian Hryvnia", flag: "🇺🇦" },
+  { code: "RON", name: "Romanian Leu", flag: "🇷🇴" },
+  { code: "BGN", name: "Bulgarian Lev", flag: "🇧🇬" },
+  { code: "ARS", name: "Argentine Peso", flag: "🇦🇷" },
+  { code: "CLP", name: "Chilean Peso", flag: "🇨🇱" },
+  { code: "COP", name: "Colombian Peso", flag: "🇨🇴" },
 ];
 
 const quickPairs = [
@@ -86,20 +105,36 @@ export default function Home() {
     async function loadRate() {
       try {
         const response = await fetch(
-          `https://api.frankfurter.dev/v2/rate/${from}/${to}`,
-          { signal: controller.signal },
+          `https://open.er-api.com/v6/latest/${from}`,
+          { signal: controller.signal, cache: "no-store" },
         );
 
         if (!response.ok) {
           throw new Error("We couldn’t load the latest exchange rate.");
         }
 
-        const data: { date: string; rate: number } = await response.json();
-        if (!Number.isFinite(data.rate) || !data.date) {
+        const data: {
+          result: string;
+          time_last_update_utc: string;
+          conversion_rates: Record<string, number>;
+        } = await response.json();
+        const rate = data.conversion_rates?.[to];
+        const updatedAt = new Date(data.time_last_update_utc);
+        if (
+          data.result !== "success" ||
+          rate === undefined ||
+          !Number.isFinite(rate) ||
+          !Number.isFinite(updatedAt.getTime())
+        ) {
           throw new Error("The exchange rate service returned invalid data.");
         }
 
-        setRateResult({ key, rate: data.rate, date: data.date, error: null });
+        setRateResult({
+          key,
+          rate,
+          date: new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(updatedAt),
+          error: null,
+        });
       } catch (cause) {
         if (!controller.signal.aborted) {
           setRateResult({
@@ -405,7 +440,7 @@ export default function Home() {
 
       <footer className="footer">
         <span>© 2026 moneta. Made for wherever you’re headed.</span>
-        <span className="footer-data"><span className="status-dot" /> Rates by Frankfurter</span>
+        <span className="footer-data"><span className="status-dot" /> Rates by ExchangeRate-API</span>
       </footer>
     </main>
   );
