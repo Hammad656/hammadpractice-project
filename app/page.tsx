@@ -50,6 +50,35 @@ const currencies = [
   { code: "ARS", name: "Argentine Peso", flag: "🇦🇷" },
   { code: "CLP", name: "Chilean Peso", flag: "🇨🇱" },
   { code: "COP", name: "Colombian Peso", flag: "🇨🇴" },
+  { code: "HKD", name: "Hong Kong Dollar", flag: "🇭🇰" },
+  { code: "KES", name: "Kenyan Shilling", flag: "🇰🇪" },
+  { code: "MAD", name: "Moroccan Dirham", flag: "🇲🇦" },
+  { code: "GEL", name: "Georgian Lari", flag: "🇬🇪" },
+  { code: "GHS", name: "Ghanaian Cedi", flag: "🇬🇭" },
+  { code: "BHD", name: "Bahraini Dinar", flag: "🇧🇭" },
+  { code: "BOB", name: "Bolivian Boliviano", flag: "🇧🇴" },
+  { code: "KZT", name: "Kazakhstani Tenge", flag: "🇰🇿" },
+  { code: "TWD", name: "New Taiwan Dollar", flag: "🇹🇼" },
+  { code: "PEN", name: "Peruvian Sol", flag: "🇵🇪" },
+  { code: "UYU", name: "Uruguayan Peso", flag: "🇺🇾" },
+  { code: "CRC", name: "Costa Rican Colón", flag: "🇨🇷" },
+  { code: "DOP", name: "Dominican Peso", flag: "🇩🇴" },
+  { code: "DZD", name: "Algerian Dinar", flag: "🇩🇿" },
+  { code: "ETB", name: "Ethiopian Birr", flag: "🇪🇹" },
+  { code: "JOD", name: "Jordanian Dinar", flag: "🇯🇴" },
+  { code: "JMD", name: "Jamaican Dollar", flag: "🇯🇲" },
+  { code: "KHR", name: "Cambodian Riel", flag: "🇰🇭" },
+  { code: "LAK", name: "Lao Kip", flag: "🇱🇦" },
+  { code: "MUR", name: "Mauritian Rupee", flag: "🇲🇺" },
+  { code: "MZN", name: "Mozambican Metical", flag: "🇲🇿" },
+  { code: "OMR", name: "Omani Rial", flag: "🇴🇲" },
+  { code: "PYG", name: "Paraguayan Guaraní", flag: "🇵🇾" },
+  { code: "RSD", name: "Serbian Dinar", flag: "🇷🇸" },
+  { code: "RWF", name: "Rwandan Franc", flag: "🇷🇼" },
+  { code: "TND", name: "Tunisian Dinar", flag: "🇹🇳" },
+  { code: "TZS", name: "Tanzanian Shilling", flag: "🇹🇿" },
+  { code: "UGX", name: "Ugandan Shilling", flag: "🇺🇬" },
+  { code: "UZS", name: "Uzbekistani Soʻm", flag: "🇺🇿" },
 ];
 
 const quickPairs = [
@@ -116,17 +145,27 @@ export default function Home() {
         const data: {
           result: string;
           time_last_update_utc: string;
-          conversion_rates: Record<string, number>;
+          rates: Record<string, number>;
+          "error-type"?: string;
         } = await response.json();
-        const rate = data.conversion_rates?.[to];
+        if (data.result !== "success") {
+          throw new Error(
+            data["error-type"]
+              ? `The exchange rate service reported: ${data["error-type"]}.`
+              : "The exchange rate service couldn’t provide rates right now.",
+          );
+        }
+
+        const rate = data.rates?.[to];
         const updatedAt = new Date(data.time_last_update_utc);
         if (
-          data.result !== "success" ||
-          rate === undefined ||
+          typeof rate !== "number" ||
           !Number.isFinite(rate) ||
           !Number.isFinite(updatedAt.getTime())
         ) {
-          throw new Error("The exchange rate service returned invalid data.");
+          throw new Error(
+            `A current ${from} to ${to} exchange rate isn’t available.`,
+          );
         }
 
         setRateResult({
